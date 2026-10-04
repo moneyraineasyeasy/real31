@@ -1961,6 +1961,34 @@ def build_portal_bundle(
         [],
     )
 
+    # ---- V3 FIX: 只保留被選中 candidates 相關的 audits ----
+    # 避免全部 audits (44+ 條) 序列化後超過 Google Sheets
+    # 單一儲存格 50,000 字元限制。
+    selected_labels = set()
+
+    for candidate in candidates:
+        if candidate.get("id") in selected_ids:
+            selected_labels.add(
+                clean_text(
+                    candidate.get("label")
+                )
+            )
+
+    if selected_labels and isinstance(
+        audits,
+        list,
+    ):
+        filtered_audits = [
+            a for a in audits
+            if isinstance(a, dict)
+            and clean_text(
+                a.get("label")
+            ) in selected_labels
+        ]
+
+        if filtered_audits:
+            audits = filtered_audits
+
     def _json(value):
         if value is None:
             return ""
