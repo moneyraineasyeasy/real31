@@ -1695,6 +1695,22 @@ def build_portal_bundle(
         if candidate_id not in selected_ids:
             continue
 
+        shift = candidate.get(
+            "odds_shift",
+            {},
+        )
+
+        if not isinstance(shift, dict):
+            shift = {}
+
+        family_out = candidate.get(
+            "family_out_audit",
+            {},
+        )
+
+        if not isinstance(family_out, dict):
+            family_out = {}
+
         identity = "|".join([
             match_id,
             candidate_id,
@@ -1836,19 +1852,6 @@ def build_portal_bundle(
 
     movement = result.get(
         "odds_shift_analysis",
-        {},
-    )
-
-    shift = candidate.get(
-        "odds_shift",
-        {},
-    )
-
-    if not isinstance(shift, dict):
-        shift = {}
-
-    family_out = candidate.get(
-        "family_out_audit",
         {},
     )
 
