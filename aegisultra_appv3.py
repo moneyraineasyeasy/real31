@@ -363,6 +363,33 @@ def optional_text(value: Any) -> str:
     return str(value).strip()
 
 
+def clean_text(value: Any) -> str:
+    """Clean a value to a safe string, handling NaN/None."""
+    if value is None:
+        return ""
+
+    try:
+        missing = pd.isna(value)
+
+        if isinstance(missing, bool) and missing:
+            return ""
+
+    except Exception:
+        pass
+
+    text = str(value).strip()
+
+    if text.lower() in {
+        "nan",
+        "none",
+        "<na>",
+        "nat",
+    }:
+        return ""
+
+    return text
+
+
 def safe_float(
     value: Any,
     default: Optional[float] = None,
