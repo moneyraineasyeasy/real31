@@ -66,7 +66,7 @@ ENGINE_VERSION = getattr(
 
 DEFAULT_API_URL = (
     "https://script.google.com/macros/s/"
-    "AKfycbz7fltyng10Ulm2fjfgWWl3740GRFbHcvUci2lSvAv8nhkduIOnyfG_Q0IPwxKYoddd6g/"
+    "AKfycbwhceZ9-Z-n4R7U-ctJsLrmZuSiy98MtCPgUIw26ZOM9tv2Y5WPt7af56mJJ8M4pbqfww/"
     "exec"
 )
 
@@ -3015,6 +3015,36 @@ def _extract_movement_audits(
 
     audits: List[Dict[str, Any]] = []
 
+    # 建立 label → candidate_id 映射，用於從走勢審計反查所屬推薦
+    label_to_cid: Dict[str, str] = {}
+
+    for candidate in candidates:
+        if not isinstance(
+            candidate,
+            dict,
+        ):
+            continue
+
+        cid = optional_text(
+            candidate.get("id")
+        )
+
+        if not cid:
+            continue
+
+        for key in (
+            "label",
+            "name",
+            "title",
+            "candidate_label",
+        ):
+            label = optional_text(
+                candidate.get(key)
+            )
+
+            if label and label not in label_to_cid:
+                label_to_cid[label] = cid
+
     for container_name in (
         "odds_movement_analysis",
         "odds_shift_analysis",
@@ -3039,14 +3069,48 @@ def _extract_movement_audits(
                 series,
                 list,
             ):
-                audits.extend(
-                    item
-                    for item in series
-                    if isinstance(
+                for item in series:
+                    if not isinstance(
                         item,
                         dict,
-                    )
-                )
+                    ):
+                        continue
+
+                    # 帶上所屬 candidate_id，供 Portal 端按推薦過濾
+                    if "candidate_id" not in item:
+                        cid = (
+                            container.get("candidate_id")
+                            or container.get("id")
+                        )
+
+                        if not cid:
+                            # 嘗試從 label / market 反查
+                            for lookup_key in (
+                                "label",
+                                "name",
+                                "market",
+                                "market_name",
+                            ):
+                                label_val = optional_text(
+                                    item.get(lookup_key)
+                                )
+
+                                if (
+                                    label_val
+                                    and label_val in label_to_cid
+                                ):
+                                    cid = label_to_cid[
+                                        label_val
+                                    ]
+                                    break
+
+                        if cid:
+                            item = dict(
+                                item,
+                                candidate_id=cid,
+                            )
+
+                    audits.append(item)
 
     if not audits:
         seen = set()
@@ -3054,6 +3118,10 @@ def _extract_movement_audits(
         for candidate in candidates:
             movement = candidate.get(
                 "odds_movement"
+            )
+
+            cid = optional_text(
+                candidate.get("id")
             )
 
             if isinstance(
@@ -3075,6 +3143,13 @@ def _extract_movement_audits(
 
                     if key not in seen:
                         seen.add(key)
+
+                        if cid:
+                            item = dict(
+                                item,
+                                candidate_id=cid,
+                            )
+
                         audits.append(item)
 
     return audits
@@ -3199,37 +3274,52 @@ def build_analysis_payload(
                 **prior,
             })
 
-        scores = candidate.get(
-            "correct_score_references"
-        ) or candidate.get(
-            "correct_scores"
+        # correct_score_references / correct_scores 是「整場一份」的結構，
+        # 不在單一 candidate 上，所以迴圈內不再逐條撈取。
+        pass
+
+    # ---- 波膽參考：整場層級（correct_scores.recommendations）----
+    # engine 產出的波膽結構為：
+    #   result["correct_scores"] = {
+    #       "warning": "...",
+    #       "recommendations": [{"score": "2-1", "probability": {...}}, ...]
+    #   }
+    # 因此要讀取 correct_scores.recommendations，而非 candidate 上的欄位。
+    cs_container = (
+        result.get("correct_scores")
+        or result.get("correct_score_references")
+    )
+
+    if isinstance(
+        cs_container,
+        dict,
+    ):
+        cs_list = (
+            cs_container.get("recommendations")
+            or cs_container.get("scores")
+            or cs_container.get("items")
         )
 
         if isinstance(
-            scores,
+            cs_list,
             list,
         ):
             correct_score_records.extend(
                 item
-                for item in scores
+                for item in cs_list
                 if isinstance(
                     item,
                     dict,
                 )
             )
 
-    # engine 層級的正確比分參考（例如 FT 模型統一產出）
-    engine_scores = result.get(
-        "correct_score_references"
-    )
-
-    if isinstance(
-        engine_scores,
+    elif isinstance(
+        cs_container,
         list,
     ):
         correct_score_records.extend(
             item
-            for item in engine_scores
+            for item in cs_container
             if isinstance(
                 item,
                 dict,
