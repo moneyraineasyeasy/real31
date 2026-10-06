@@ -363,33 +363,6 @@ def optional_text(value: Any) -> str:
     return str(value).strip()
 
 
-def clean_text(value: Any) -> str:
-    """Clean a value to a safe string, handling NaN/None."""
-    if value is None:
-        return ""
-
-    try:
-        missing = pd.isna(value)
-
-        if isinstance(missing, bool) and missing:
-            return ""
-
-    except Exception:
-        pass
-
-    text = str(value).strip()
-
-    if text.lower() in {
-        "nan",
-        "none",
-        "<na>",
-        "nat",
-    }:
-        return ""
-
-    return text
-
-
 def safe_float(
     value: Any,
     default: Optional[float] = None,
@@ -1722,22 +1695,6 @@ def build_portal_bundle(
         if candidate_id not in selected_ids:
             continue
 
-        shift = candidate.get(
-            "odds_shift",
-            {},
-        )
-
-        if not isinstance(shift, dict):
-            shift = {}
-
-        family_out = candidate.get(
-            "family_out_audit",
-            {},
-        )
-
-        if not isinstance(family_out, dict):
-            family_out = {}
-
         identity = "|".join([
             match_id,
             candidate_id,
@@ -1882,86 +1839,31 @@ def build_portal_bundle(
         {},
     )
 
+    shift = candidate.get(
+        "odds_shift",
+        {},
+    )
+
+    if not isinstance(shift, dict):
+        shift = {}
+
+    family_out = candidate.get(
+        "family_out_audit",
+        {},
+    )
+
     if not isinstance(family_out, dict):
         family_out = {}
 
-    # ---- V3 FIX: 從每條 recommendation 聚合 family_out / stress / prior_comparison ----
-    recommendations_list = result.get(
-        "recommendations",
-        [],
+    family_out_global = result.get(
+        "family_out_analysis",
+        {},
     )
 
-    # family_out: 聚合所有被選中 recommendation 的 family_out_audit
-    family_out_global = {
-        "scenarios": [],
-        "scenario_count": 0,
-        "status": None,
-    }
-
-    for rec in recommendations_list:
-        if not isinstance(rec, dict):
-            continue
-        fo = rec.get("family_out_audit")
-        if isinstance(fo, dict):
-            # 收集 scenarios
-            rec_scenarios = fo.get("scenarios", [])
-            if isinstance(rec_scenarios, list):
-                for s in rec_scenarios:
-                    if isinstance(s, dict):
-                        s_copy = dict(s)
-                        s_copy["_rec_id"] = rec.get("id", "")
-                        s_copy["_rec_label"] = rec.get("label", "")
-                        family_out_global["scenarios"].append(
-                            s_copy
-                        )
-
-            # 取第一個有意義的 status
-            if family_out_global["status"] is None:
-                family_out_global["status"] = fo.get("status")
-
-    family_out_global["scenario_count"] = len(
-        family_out_global["scenarios"]
+    stress = result.get(
+        "stress_analysis",
+        {},
     )
-
-    # stress: 聚合所有被選中 recommendation 的 stress_audit
-    stress = {
-        "scenarios": [],
-        "scenario_count": 0,
-    }
-
-    for rec in recommendations_list:
-        if not isinstance(rec, dict):
-            continue
-        sa = rec.get("stress_audit")
-        if isinstance(sa, dict):
-            for level_key in [
-                "light",
-                "medium",
-                "heavy",
-            ]:
-                level_data = sa.get(level_key)
-                if isinstance(level_data, dict):
-                    level_copy = dict(level_data)
-                    level_copy["_level"] = level_key
-                    level_copy["_rec_id"] = rec.get("id", "")
-                    level_copy["_rec_label"] = rec.get("label", "")
-                    stress["scenarios"].append(
-                        level_copy
-                    )
-
-    stress["scenario_count"] = len(
-        stress["scenarios"]
-    )
-
-    # prior_comparison: 用第一條 recommendation 的
-    prior_comparison = None
-    for rec in recommendations_list:
-        if not isinstance(rec, dict):
-            continue
-        pc = rec.get("pre_projection_prior_comparison")
-        if isinstance(pc, dict):
-            prior_comparison = pc
-            break
 
     coherence = result.get(
         "ht_ft_coherence",
@@ -1987,34 +1889,6 @@ def build_portal_bundle(
         "candidate_audits",
         [],
     )
-
-    # ---- V3 FIX: 只保留被選中 candidates 相關的 audits ----
-    # 避免全部 audits (44+ 條) 序列化後超過 Google Sheets
-    # 單一儲存格 50,000 字元限制。
-    selected_labels = set()
-
-    for candidate in candidates:
-        if candidate.get("id") in selected_ids:
-            selected_labels.add(
-                clean_text(
-                    candidate.get("label")
-                )
-            )
-
-    if selected_labels and isinstance(
-        audits,
-        list,
-    ):
-        filtered_audits = [
-            a for a in audits
-            if isinstance(a, dict)
-            and clean_text(
-                a.get("label")
-            ) in selected_labels
-        ]
-
-        if filtered_audits:
-            audits = filtered_audits
 
     def _json(value):
         if value is None:
@@ -2067,7 +1941,9 @@ def build_portal_bundle(
             stress
         ),
         "prior_comparison_json": _json(
-            prior_comparison
+            result.get(
+                "pre_projection_prior_comparison"
+            )
         ),
         "correct_scores_json": _json(
             correct_scores.get(
