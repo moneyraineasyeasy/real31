@@ -66,7 +66,7 @@ ENGINE_VERSION = getattr(
 
 DEFAULT_API_URL = (
     "https://script.google.com/macros/s/"
-    "AKfycbz7fltyng10Ulm2fjfgWWl3740GRFbHcvUci2lSvAv8nhkduIOnyfG_Q0IPwxKYoddd6g/"
+    "AKfycbwhceZ9-Z-n4R7U-ctJsLrmZuSiy98MtCPgUIw26ZOM9tv2Y5WPt7af56mJJ8M4pbqfww/"
     "exec"
 )
 
@@ -3057,12 +3057,11 @@ def _extract_movement_audits(
             container,
             dict,
         ):
-            series = container.get(
-                "audits"
-            ) or container.get(
-                "movements"
-            ) or container.get(
-                "series"
+            series = (
+                container.get("candidate_audits")
+                or container.get("audits")
+                or container.get("movements")
+                or container.get("series")
             )
 
             if isinstance(
@@ -3084,12 +3083,13 @@ def _extract_movement_audits(
                         )
 
                         if not cid:
-                            # 嘗試從 label / market 反查
+                            # 嘗試從 label / id 反查
                             for lookup_key in (
                                 "label",
                                 "name",
                                 "market",
                                 "market_name",
+                                "id",
                             ):
                                 label_val = optional_text(
                                     item.get(lookup_key)
@@ -3256,14 +3256,29 @@ def build_analysis_payload(
                 **stress,
             })
 
-        prior = candidate.get(
+        # prior 實際結構：candidate["pre_projection_prior_comparison"]["priors"]
+        prior_comparison = candidate.get(
+            "pre_projection_prior_comparison"
+        ) or candidate.get(
             "prior_comparison"
         )
 
         if isinstance(
-            prior,
+            prior_comparison,
             dict,
         ):
+            # 如果是完整的比較容器，取出 priors 部分
+            priors = prior_comparison.get(
+                "priors",
+                {},
+            )
+
+            if not isinstance(
+                priors,
+                dict,
+            ):
+                priors = {}
+
             prior_records.append({
                 "candidate_id": optional_text(
                     candidate.get("id")
@@ -3271,7 +3286,19 @@ def build_analysis_payload(
                 "label": optional_text(
                     candidate.get("label")
                 ),
-                **prior,
+                "priors": priors,
+                "disparity": prior_comparison.get(
+                    "disparity",
+                    {},
+                ),
+                **{
+                    k: v
+                    for k, v in prior_comparison.items()
+                    if k not in (
+                        "priors",
+                        "disparity",
+                    )
+                },
             })
 
         # correct_score_references / correct_scores 是「整場一份」的結構，
