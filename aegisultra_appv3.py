@@ -337,6 +337,246 @@ st.markdown(
         background: rgba(255,255,255,0.018);
     }
 
+    /* ==========================================================
+       Model Health Diagnostic Panel
+       ========================================================== */
+
+    .health-panel {
+        position: relative;
+        overflow: hidden;
+        padding: 1.6rem 1.8rem;
+        margin-bottom: 1.1rem;
+        border-radius: 22px;
+        background:
+            radial-gradient(
+                circle at 88% 8%,
+                rgba(56,189,248,0.13),
+                transparent 34%
+            ),
+            linear-gradient(
+                120deg,
+                rgba(20,28,52,0.72),
+                rgba(11,16,32,0.86)
+            );
+        border: 1px solid rgba(255,255,255,0.10);
+        box-shadow: 0 16px 48px rgba(0,0,0,0.28);
+    }
+
+    .health-panel-robust {
+        border-color: rgba(50,217,161,0.32);
+        box-shadow:
+            0 0 0 1px rgba(50,217,161,0.12),
+            0 16px 48px rgba(0,0,0,0.28);
+    }
+
+    .health-panel-acceptable {
+        border-color: rgba(255,189,89,0.32);
+        box-shadow:
+            0 0 0 1px rgba(255,189,89,0.12),
+            0 16px 48px rgba(0,0,0,0.28);
+    }
+
+    .health-panel-fragile {
+        border-color: rgba(255,101,119,0.34);
+        box-shadow:
+            0 0 0 1px rgba(255,101,119,0.14),
+            0 16px 48px rgba(0,0,0,0.28);
+    }
+
+    .health-panel-header {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-bottom: 1.15rem;
+    }
+
+    .health-panel-kicker {
+        color: rgba(255,255,255,0.46);
+        font-size: 0.72rem;
+        font-weight: 950;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+    }
+
+    .health-grid {
+        display: grid;
+        grid-template-columns: 210px 1fr;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    @media (max-width: 820px) {
+        .health-grid {
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+        }
+    }
+
+    .health-gauge-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .health-gauge {
+        position: relative;
+        width: 178px;
+        height: 178px;
+    }
+
+    .health-gauge svg {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+    }
+
+    .health-gauge-track {
+        fill: none;
+        stroke: rgba(255,255,255,0.08);
+        stroke-width: 12;
+    }
+
+    .health-gauge-arc {
+        fill: none;
+        stroke-width: 12;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.6s ease;
+    }
+
+    .health-gauge-score {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .health-gauge-score-value {
+        color: #fff;
+        font-size: 2.55rem;
+        font-weight: 850;
+        line-height: 1;
+    }
+
+    .health-gauge-score-unit {
+        color: rgba(255,255,255,0.42);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        margin-top: 0.15rem;
+    }
+
+    .health-grade {
+        margin-top: 0.85rem;
+        display: inline-block;
+        padding: 0.4rem 0.95rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 950;
+        letter-spacing: 0.12em;
+    }
+
+    .health-grade-robust {
+        color: #8fffd1;
+        background: rgba(50,217,161,0.13);
+        border: 1px solid rgba(50,217,161,0.34);
+    }
+
+    .health-grade-acceptable {
+        color: #ffe0a8;
+        background: rgba(255,189,89,0.13);
+        border: 1px solid rgba(255,189,89,0.34);
+    }
+
+    .health-grade-fragile {
+        color: #ffb3bd;
+        background: rgba(255,101,119,0.14);
+        border: 1px solid rgba(255,101,119,0.36);
+    }
+
+    .health-dimensions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.62rem;
+    }
+
+    .health-dimension {
+        display: grid;
+        grid-template-columns: 132px 1fr 78px;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .health-dim-label {
+        color: rgba(255,255,255,0.58);
+        font-size: 0.81rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+    }
+
+    .health-bar {
+        position: relative;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        overflow: hidden;
+    }
+
+    .health-bar-fill {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+    }
+
+    .health-dim-value {
+        text-align: right;
+        font-size: 0.79rem;
+        font-weight: 850;
+        letter-spacing: 0.02em;
+    }
+
+    .health-issues {
+        margin-top: 1.15rem;
+        padding: 0.9rem 1rem;
+        border-radius: 13px;
+        background: rgba(255,101,119,0.075);
+        border: 1px solid rgba(255,101,119,0.20);
+    }
+
+    .health-issues-title {
+        color: #ffb3bd;
+        font-size: 0.75rem;
+        font-weight: 950;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+
+    .health-issue {
+        color: rgba(255,255,255,0.72);
+        font-size: 0.83rem;
+        line-height: 1.6;
+        padding-left: 1rem;
+        position: relative;
+    }
+
+    .health-issue::before {
+        content: "⚠";
+        position: absolute;
+        left: 0;
+        color: #ffbd59;
+        font-size: 0.72rem;
+    }
+
+    .health-notes {
+        margin-top: 1rem;
+        color: rgba(255,255,255,0.40);
+        font-size: 0.76rem;
+        line-height: 1.6;
+    }
+
     @media (max-width: 700px) {
         .hero-title {
             font-size: 2.15rem;
@@ -613,8 +853,984 @@ def download_name(prefix: str) -> str:
 
 
 # ============================================================
-# 5. Example V3 input
+# 5a. Model health diagnostic
 # ============================================================
+#
+# A weighted-rule health engine. It reads the telemetry that the
+# AEGIS Ultra engine already exposes on the result object and
+# condenses it into a single grade (ROBUST / ACCEPTABLE / FRAGILE)
+# plus a per-dimension score sheet and a list of concrete issues.
+#
+# Dimensions and default weights (sum = 1.00):
+#   odds_movement    0.20  - consensus among monitored books
+#   family_out       0.18  - one-family removal stability
+#   stress           0.17  - hit prob. under light/medium stress
+#   ht_ft_coherence  0.15  - HT transport consistency
+#   model_quality    0.14  - grid / projection quality
+#   coverage         0.16  - how much telemetry we actually have
+#
+# Each dimension returns a 0..1 score. The weighted mean is mapped
+# to a grade at thresholds 0.75 (ROBUST) and 0.55 (ACCEPTABLE).
+#
+# Weights and thresholds are intentionally exposed as constants so
+# they can be tuned without touching the grading code.
+
+HEALTH_WEIGHTS: Dict[str, float] = {
+    "odds_movement": 0.20,
+    "family_out": 0.18,
+    "stress": 0.17,
+    "ht_ft_coherence": 0.15,
+    "model_quality": 0.14,
+    "coverage": 0.16,
+}
+
+HEALTH_THRESHOLD_ROBUST = 0.75
+HEALTH_THRESHOLD_ACCEPTABLE = 0.55
+
+# A status value that, by itself, drags the grade down to FRAGILE
+# regardless of the weighted mean. Set to None to disable.
+HEALTH_HARD_FAIL_STATUSES = {
+    "POOR_PRICE",
+    "SEVERELY_UNDERPAID",
+    "FAIL",
+}
+
+
+def _score_from_status(
+    status: Any,
+    mapping: Optional[Dict[str, float]] = None,
+) -> Optional[float]:
+    """Turn a textual status into a 0..1 score using ``mapping``."""
+
+    text = optional_text(status).upper()
+
+    if not text or text == "UNKNOWN":
+        return None
+
+    if mapping:
+        if text in mapping:
+            return mapping[text]
+
+        return mapping.get(
+            "DEFAULT",
+            0.5,
+        )
+
+    return None
+
+
+def _score_coverage(
+    result: Dict[str, Any],
+    candidates: List[Dict[str, Any]],
+) -> float:
+    """
+    How much of the V3 telemetry is actually present? A model with
+    no movement series, no stress audit and no family-out audit is
+    technically not unhealthy -- it is just unaudited, which is a
+    different (and weaker) statement.
+    """
+
+    checks = 0
+    present = 0
+
+    # odds movement
+    checks += 1
+
+    if result.get(
+        "odds_movement_analysis"
+    ) or result.get(
+        "odds_shift_analysis"
+    ):
+        present += 1
+
+    elif any(
+        bool(candidate.get("odds_movement"))
+        for candidate in candidates
+    ):
+        present += 1
+
+    # family-out + stress
+    checks += 1
+
+    if any(
+        candidate.get("family_out_audit")
+        for candidate in candidates
+    ):
+        present += 0.5
+
+    if any(
+        candidate.get("stress_audit")
+        for candidate in candidates
+    ):
+        present += 0.5
+
+    # HT-FT coherence
+    checks += 1
+
+    if result.get(
+        "ht_ft_coherence"
+    ):
+        present += 1
+
+    # model quality / projection diagnostics
+    checks += 1
+
+    if result.get(
+        "model_quality"
+    ) or result.get(
+        "diagnostics"
+    ):
+        present += 1
+
+    # at least one candidate has a probability distribution
+    checks += 1
+
+    if any(
+        candidate.get("probability")
+        for candidate in candidates
+    ):
+        present += 1
+
+    return present / checks if checks else 0.0
+
+
+def _score_odds_movement(
+    result: Dict[str, Any],
+    candidates: List[Dict[str, Any]],
+) -> Optional[float]:
+    """
+    Prefer an explicit agreement ratio when the engine supplies it;
+    fall back to a coarse status mapping.
+    """
+
+    for container_name in (
+        "odds_movement_analysis",
+        "odds_shift_analysis",
+    ):
+        container = result.get(
+            container_name
+        )
+
+        if isinstance(
+            container,
+            dict,
+        ):
+            ratio = safe_float(
+                container.get(
+                    "agreement_ratio"
+                )
+            )
+
+            if ratio is not None:
+                return max(
+                    0.0,
+                    min(
+                        1.0,
+                        ratio,
+                    ),
+                )
+
+            return _score_from_status(
+                container.get("status"),
+                {
+                    "PASS": 0.9,
+                    "SUPPORTED": 0.85,
+                    "FAIR_OR_BETTER": 0.8,
+                    "MIXED_PRICE": 0.55,
+                    "CAUTION": 0.5,
+                    "CONFLICTED": 0.35,
+                    "SLIGHTLY_UNDERPAID": 0.35,
+                    "POOR_PRICE": 0.15,
+                    "SEVERELY_UNDERPAID": 0.05,
+                    "NOT_AVAILABLE": 0.45,
+                    "NOT_PROVIDED": 0.45,
+                    "NOT_TESTABLE": 0.5,
+                    "DEFAULT": 0.5,
+                },
+            )
+
+    return None
+
+
+def _score_family_out(
+    candidates: List[Dict[str, Any]],
+) -> Optional[float]:
+    """Average family-out score across candidates that have it."""
+
+    scores = []
+
+    for candidate in candidates:
+        audit = candidate.get(
+            "family_out_audit"
+        )
+
+        if not isinstance(
+            audit,
+            dict,
+        ):
+            continue
+
+        explicit = safe_float(
+            audit.get("score")
+        )
+
+        if explicit is not None:
+            scores.append(
+                max(
+                    0.0,
+                    min(
+                        1.0,
+                        explicit,
+                    ),
+                )
+            )
+
+            continue
+
+        scores.append(
+            _score_from_status(
+                audit.get("status"),
+                {
+                    "PASS": 0.9,
+                    "ROBUST": 0.88,
+                    "SUPPORTED": 0.8,
+                    "CAUTION": 0.5,
+                    "FRAGILE": 0.3,
+                    "FAIL": 0.1,
+                    "DEFAULT": 0.5,
+                },
+            )
+            or 0.5
+        )
+
+    if not scores:
+        return None
+
+    return sum(scores) / len(scores)
+
+
+def _score_stress(
+    candidates: List[Dict[str, Any]],
+) -> Optional[float]:
+    """
+    Light stress is the most realistic scenario, so we weight it
+    heaviest inside this dimension; medium is a tie-breaker.
+    """
+
+    scores = []
+
+    for candidate in candidates:
+        stress = candidate.get(
+            "stress_audit"
+        )
+
+        if not isinstance(
+            stress,
+            dict,
+        ):
+            continue
+
+        light = safe_float(
+            stress.get("light"),
+            stress.get(
+                "light_hit_probability"
+            ),
+        )
+
+        if light is None:
+            light = safe_float(
+                stress.get("light", {}).get(
+                    "hit_probability"
+                )
+            )
+
+        medium = safe_float(
+            stress.get("medium"),
+            stress.get(
+                "medium_hit_probability"
+            ),
+        )
+
+        if medium is None:
+            medium = safe_float(
+                stress.get("medium", {}).get(
+                    "hit_probability"
+                )
+            )
+
+        candidate_scores = [
+            s
+            for s in (light, medium)
+            if s is not None
+        ]
+
+        if candidate_scores:
+            # 70% light / 30% medium
+            weighted = (
+                (light or 0.0) * 0.7
+                + (medium or 0.0) * 0.3
+            ) / (
+                0.7 + (0.3 if medium is not None else 0.0)
+                or 1.0
+            )
+
+            scores.append(
+                max(
+                    0.0,
+                    min(
+                        1.0,
+                        weighted,
+                    ),
+                )
+            )
+
+    if not scores:
+        return None
+
+    return sum(scores) / len(scores)
+
+
+def _score_ht_ft_coherence(
+    result: Dict[str, Any],
+) -> Optional[float]:
+    coherence = result.get(
+        "ht_ft_coherence"
+    )
+
+    if not isinstance(
+        coherence,
+        dict,
+    ):
+        return None
+
+    return _score_from_status(
+        coherence.get("status"),
+        {
+            "PASS": 0.92,
+            "COMPLETED": 0.85,
+            "SUPPORTED": 0.8,
+            "CAUTION": 0.5,
+            "FRAGILE": 0.3,
+            "FAIL": 0.1,
+            "NOT_AVAILABLE": 0.6,
+            "NOT_TESTABLE": 0.55,
+            "DEFAULT": 0.5,
+        },
+    )
+
+
+def _score_model_quality(
+    result: Dict[str, Any],
+) -> Optional[float]:
+    quality = result.get(
+        "model_quality"
+    )
+
+    if isinstance(
+        quality,
+        dict,
+    ):
+        explicit = safe_float(
+            quality.get("score")
+        )
+
+        if explicit is not None:
+            return max(
+                0.0,
+                min(
+                    1.0,
+                    explicit,
+                ),
+            )
+
+        return _score_from_status(
+            quality.get("status"),
+            {
+                "PASS": 0.92,
+                "COMPLETED": 0.85,
+                "ROBUST": 0.88,
+                "SUPPORTED": 0.78,
+                "CAUTION": 0.5,
+                "FRAGILE": 0.3,
+                "FAIL": 0.1,
+                "DEFAULT": 0.5,
+            },
+        )
+
+    return None
+
+
+def evaluate_model_health(
+    result: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Run the full diagnostic. Always returns a complete dict even
+    when the engine output is missing or malformed, so the UI can
+    render a graceful "insufficient data" state instead of erroring.
+    """
+
+    if not isinstance(
+        result,
+        dict,
+    ):
+        return _empty_health(
+            "INSUFFICIENT_DATA",
+            ["引擎未回傳有效結果，無法進行健康評估。"],
+        )
+
+    candidates = result.get(
+        "candidate_markets",
+        [],
+    )
+
+    if not isinstance(
+        candidates,
+        list,
+    ):
+        candidates = []
+
+    scorers = {
+        "odds_movement": lambda: _score_odds_movement(
+            result,
+            candidates,
+        ),
+        "family_out": lambda: _score_family_out(
+            candidates,
+        ),
+        "stress": lambda: _score_stress(
+            candidates,
+        ),
+        "ht_ft_coherence": lambda: _score_ht_ft_coherence(
+            result,
+        ),
+        "model_quality": lambda: _score_model_quality(
+            result,
+        ),
+        "coverage": lambda: _score_coverage(
+            result,
+            candidates,
+        ),
+    }
+
+    dimensions: Dict[str, Dict[str, Any]] = {}
+    weighted_sum = 0.0
+    weight_used = 0.0
+
+    for name, scorer in scorers.items():
+        weight = HEALTH_WEIGHTS.get(
+            name,
+            0.0,
+        )
+
+        score = scorer()
+
+        dimensions[name] = {
+            "score": score,
+            "weight": weight,
+            "available": score is not None,
+        }
+
+        if score is not None:
+            weighted_sum += score * weight
+            weight_used += weight
+
+    composite = (
+        weighted_sum / weight_used
+        if weight_used > 0
+        else 0.0
+    )
+
+    # hard-fail: any key status in the denylist drags the grade
+    # down to FRAGILE and records a concrete issue.
+    hard_fail_reasons = _collect_hard_fail_reasons(
+        result,
+        candidates,
+    )
+
+    grade = _grade_from_score(
+        composite,
+        hard_fail_reasons,
+    )
+
+    return {
+        "grade": grade,
+        "composite": round(
+            composite,
+            4,
+        ),
+        "score_0_100": round(
+            composite * 100,
+        ),
+        "dimensions": dimensions,
+        "weight_used_ratio": round(
+            weight_used,
+            4,
+        ),
+        "hard_fail_reasons": hard_fail_reasons,
+        "issues": _collect_issues(
+            dimensions,
+            hard_fail_reasons,
+        ),
+    }
+
+
+def _grade_from_score(
+    composite: float,
+    hard_fail_reasons: List[str],
+) -> str:
+    if hard_fail_reasons:
+        return "FRAGILE"
+
+    if composite >= HEALTH_THRESHOLD_ROBUST:
+        return "ROBUST"
+
+    if composite >= HEALTH_THRESHOLD_ACCEPTABLE:
+        return "ACCEPTABLE"
+
+    return "FRAGILE"
+
+
+def _collect_hard_fail_reasons(
+    result: Dict[str, Any],
+    candidates: List[Dict[str, Any]],
+) -> List[str]:
+    reasons: List[str] = []
+
+    def check(
+        status: Any,
+        source: str,
+    ) -> None:
+        text = optional_text(status).upper()
+
+        if text in HEALTH_HARD_FAIL_STATUSES:
+            reasons.append(
+                f"{source} 狀態為「{status_chinese(text)}」，"
+                f"嚴重削弱結論可信度"
+            )
+
+    check(
+        result.get(
+            "model_quality",
+            {},
+        ).get("status")
+        if isinstance(
+            result.get("model_quality"),
+            dict,
+        )
+        else None,
+        "模型品質",
+    )
+
+    for candidate in candidates:
+        check(
+            candidate.get("price_status"),
+            f"{optional_text(candidate.get('label')) or '候選盤'} 價格",
+        )
+
+    return reasons
+
+
+def _collect_issues(
+    dimensions: Dict[str, Dict[str, Any]],
+    hard_fail_reasons: List[str],
+) -> List[str]:
+    issues: List[str] = list(
+        hard_fail_reasons
+    )
+
+    for name, info in dimensions.items():
+        if info.get(
+            "available"
+        ):
+            continue
+
+        label = HEALTH_DIMENSION_LABELS.get(
+            name,
+            name,
+        )
+
+        issues.append(
+            f"{label}：缺少評估資料"
+        )
+
+    # flag the lowest non-coverage dimension that is actually
+    # available, so the analyst knows the main weak spot.
+    available = {
+        name: info
+        for name, info in dimensions.items()
+        if info.get("available")
+        and name != "coverage"
+        and info.get("score") is not None
+    }
+
+    if available:
+        weakest_name, weakest = min(
+            available.items(),
+            key=lambda item: item[1]["score"],
+        )
+
+        if weakest["score"] < 0.45:
+            label = HEALTH_DIMENSION_LABELS.get(
+                weakest_name,
+                weakest_name,
+            )
+
+            issues.append(
+                f"最弱環節 — {label}："
+                f"{round(weakest['score'] * 100)} 分"
+            )
+
+    # de-duplicate while preserving order
+    seen = set()
+    deduped: List[str] = []
+
+    for issue in issues:
+        if issue in seen:
+            continue
+
+        seen.add(issue)
+        deduped.append(issue)
+
+    return deduped
+
+
+def _empty_health(
+    grade: str,
+    issues: List[str],
+) -> Dict[str, Any]:
+    return {
+        "grade": grade,
+        "composite": 0.0,
+        "score_0_100": 0,
+        "dimensions": {
+            name: {
+                "score": None,
+                "weight": weight,
+                "available": False,
+            }
+            for name, weight in HEALTH_WEIGHTS.items()
+        },
+        "weight_used_ratio": 0.0,
+        "hard_fail_reasons": [],
+        "issues": issues,
+    }
+
+
+HEALTH_DIMENSION_LABELS: Dict[str, str] = {
+    "odds_movement": "盤口走勢",
+    "family_out": "Family-out",
+    "stress": "壓力測試",
+    "ht_ft_coherence": "HT–FT 一致性",
+    "model_quality": "模型品質",
+    "coverage": "資料覆蓋",
+}
+
+HEALTH_DIMENSION_DESCRIPTIONS: Dict[str, str] = {
+    "odds_movement": "多家莊家盤口與機率方向是否一致",
+    "family_out": "抽走單一家族莊家後結論是否保持穩定",
+    "stress": "輕度 / 中度偏離情境下的命中率",
+    "ht_ft_coherence": "上半場與全場機率是否自洽",
+    "model_quality": "網格與機率投影的收斂品質",
+    "coverage": "本次分析實際覆蓋的審計項目比例",
+}
+
+
+def health_grade_label(grade: str) -> str:
+    return {
+        "ROBUST": "穩健",
+        "ACCEPTABLE": "可接受",
+        "FRAGILE": "脆弱",
+    }.get(
+        optional_text(
+            grade
+        ).upper(),
+        "待評估",
+    )
+
+
+def health_grade_css_class(grade: str) -> str:
+    return {
+        "ROBUST": "health-grade-robust",
+        "ACCEPTABLE": "health-grade-acceptable",
+        "FRAGILE": "health-grade-fragile",
+    }.get(
+        optional_text(
+            grade
+        ).upper(),
+        "health-grade-acceptable",
+    )
+
+
+def health_panel_css_class(grade: str) -> str:
+    return {
+        "ROBUST": "health-panel-robust",
+        "ACCEPTABLE": "health-panel-acceptable",
+        "FRAGILE": "health-panel-fragile",
+    }.get(
+        optional_text(
+            grade
+        ).upper(),
+        "",
+    )
+
+
+def health_arc_color(grade: str) -> str:
+    return {
+        "ROBUST": "#32d9a1",
+        "ACCEPTABLE": "#ffbd59",
+        "FRAGILE": "#ff6577",
+    }.get(
+        optional_text(
+            grade
+        ).upper(),
+        "#7388ff",
+    )
+
+
+def _dimension_color(score: Optional[float]) -> str:
+    if score is None:
+        return "rgba(255,255,255,0.18)"
+
+    if score >= 0.75:
+        return "#32d9a1"
+
+    if score >= 0.55:
+        return "#ffbd59"
+
+    return "#ff6577"
+
+
+def _dimension_value_text(
+    info: Dict[str, Any],
+) -> str:
+    score = info.get("score")
+
+    if score is None:
+        return "無資料"
+
+    return f"{round(score * 100)} 分"
+
+
+def render_health_panel(
+    result: Dict[str, Any],
+) -> None:
+    """
+    Hero 正下方（summary cards 之後、結果 tabs 之前）的模型
+    健康診斷面板。純展示，不修改 session_state。
+    """
+
+    health = evaluate_model_health(
+        result
+    )
+
+    grade = health.get(
+        "grade",
+        "ACCEPTABLE",
+    )
+
+    score = health.get(
+        "score_0_100",
+        0,
+    )
+
+    dimensions = health.get(
+        "dimensions",
+        {},
+    )
+
+    issues = health.get(
+        "issues",
+        [],
+    )
+
+    # ring geometry: circumference for r=74, stroke=12
+    circumference = 2 * math.pi * 74
+    clamped = max(
+        0.0,
+        min(
+            1.0,
+            health.get(
+                "composite",
+                0.0,
+            ),
+        ),
+    )
+    dash_offset = circumference * (
+        1 - clamped
+    )
+
+    color = health_arc_color(
+        grade
+    )
+
+    dimension_rows = "\n".join(
+        _dimension_row(
+            name,
+            info,
+        )
+        for name, info in dimensions.items()
+    )
+
+    issues_html = ""
+
+    if issues:
+        issue_items = "".join(
+            f'<div class="health-issue">{html_escape(item)}'
+            f'</div>'
+            for item in issues[:6]
+        )
+
+        issues_html = f"""
+        <div class="health-issues">
+            <div class="health-issues-title">
+                需注意項目（{len(issues)}）
+            </div>
+            {issue_items}
+        </div>
+        """
+
+    coverage_pct = round(
+        health.get(
+            "weight_used_ratio",
+            0.0,
+        )
+        * 100,
+    )
+
+    st.markdown(
+        f"""
+        <div class="health-panel {health_panel_css_class(grade)}">
+            <div class="health-panel-header">
+                <div class="health-panel-kicker">
+                    模型健康診斷 · Model Health
+                </div>
+            </div>
+
+            <div class="health-grid">
+                <div class="health-gauge-wrap">
+                    <div class="health-gauge">
+                        <svg viewBox="0 0 168 168">
+                            <circle
+                                class="health-gauge-track"
+                                cx="84" cy="84" r="74"
+                            />
+                            <circle
+                                class="health-gauge-arc"
+                                cx="84" cy="84" r="74"
+                                stroke="{color}"
+                                stroke-dasharray="{circumference}"
+                                stroke-dashoffset="{dash_offset}"
+                            />
+                        </svg>
+                        <div class="health-gauge-score">
+                            <div class="health-gauge-score-value">
+                                {score}
+                            </div>
+                            <div class="health-gauge-score-unit">
+                                / 100
+                            </div>
+                        </div>
+                    </div>
+                    <span class="health-grade {health_grade_css_class(grade)}">
+                        {html_escape(health_grade_label(grade))}
+                    </span>
+                </div>
+
+                <div class="health-dimensions">
+                    {dimension_rows}
+                </div>
+            </div>
+
+            {issues_html}
+
+            <div class="health-notes">
+                評分為綜合評估（非命中率預測）：盤口走勢 20% ／
+                Family-out 18% ／ 壓力測試 17% ／ HT–FT 一致性 15% ／
+                模型品質 14% ／ 資料覆蓋 16%。
+                本次有效評估覆蓋 {coverage_pct}%。
+                指標僅供風險參考，不構成投注保證。
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _dimension_row(
+    name: str,
+    info: Dict[str, Any],
+) -> str:
+    label = HEALTH_DIMENSION_LABELS.get(
+        name,
+        name,
+    )
+
+    description = HEALTH_DIMENSION_DESCRIPTIONS.get(
+        name,
+        "",
+    )
+
+    score = info.get("score")
+    available = info.get(
+        "available",
+        score is not None,
+    )
+
+    if available and score is not None:
+        pct = max(
+            2.0,
+            min(
+                100.0,
+                score * 100,
+            ),
+        )
+
+        color = _dimension_color(
+            score
+        )
+
+        value_text = (
+            f"{round(score * 100)} 分"
+        )
+
+        fill_style = (
+            f"width:{pct:.1f}%;"
+            f"background:linear-gradient("
+            f"90deg, {color}, {color}cc);"
+        )
+
+    else:
+        pct = 6.0
+        color = "rgba(255,255,255,0.22)"
+
+        value_text = (
+            '<span style="color:rgba(255,255,255,0.32)">'
+            '無資料</span>'
+        )
+
+        fill_style = (
+            f"width:{pct:.1f}%;"
+            f"background:{color};"
+        )
+
+    return f"""
+        <div class="health-dimension">
+            <div>
+                <div class="health-dim-label">{html_escape(label)}</div>
+                <div style="
+                    color:rgba(255,255,255,0.30);
+                    font-size:0.7rem;
+                    margin-top:0.12rem;
+                ">{html_escape(description)}</div>
+            </div>
+            <div class="health-bar">
+                <div class="health-bar-fill" style="{fill_style}"></div>
+            </div>
+            <div class="health-dim-value" style="color:{color}">
+                {value_text}
+            </div>
+        </div>
+    """
 
 def example_json_input() -> Dict[str, Any]:
     return {
@@ -1747,6 +2963,390 @@ def portal_request(
     return result
 
 
+def _json_or_empty(value: Any) -> str:
+    """
+    把一個值序列化為 JSON 字串，用於塞進 analysis 表的
+    *_json 欄位。None / 空結構一律回空字串，
+    避免 Sheet 裡堆滿 "null" / "[]" 雜訊。
+    """
+
+    if value is None:
+        return ""
+
+    if isinstance(
+        value,
+        (dict, list),
+    ):
+        if (
+            isinstance(
+                value,
+                list,
+            )
+            and not value
+        ):
+            return ""
+
+        if (
+            isinstance(
+                value,
+                dict,
+            )
+            and not value
+        ):
+            return ""
+
+        return json.dumps(
+            value,
+            ensure_ascii=False,
+            default=json_default,
+        )
+
+    return optional_text(value)
+
+
+def _extract_movement_audits(
+    result: Dict[str, Any],
+    candidates: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    優先取 engine 產出的結構化走勢審計；找不到時退回到各
+    候選盤上的 odds_movement 快照，再退回到單一分析容器。
+    """
+
+    audits: List[Dict[str, Any]] = []
+
+    for container_name in (
+        "odds_movement_analysis",
+        "odds_shift_analysis",
+    ):
+        container = result.get(
+            container_name
+        )
+
+        if isinstance(
+            container,
+            dict,
+        ):
+            series = container.get(
+                "audits"
+            ) or container.get(
+                "movements"
+            ) or container.get(
+                "series"
+            )
+
+            if isinstance(
+                series,
+                list,
+            ):
+                audits.extend(
+                    item
+                    for item in series
+                    if isinstance(
+                        item,
+                        dict,
+                    )
+                )
+
+    if not audits:
+        seen = set()
+
+        for candidate in candidates:
+            movement = candidate.get(
+                "odds_movement"
+            )
+
+            if isinstance(
+                movement,
+                list,
+            ):
+                for item in movement:
+                    if not isinstance(
+                        item,
+                        dict,
+                    ):
+                        continue
+
+                    key = json.dumps(
+                        item,
+                        sort_keys=True,
+                        default=str,
+                    )
+
+                    if key not in seen:
+                        seen.add(key)
+                        audits.append(item)
+
+    return audits
+
+
+def build_analysis_payload(
+    result: Dict[str, Any],
+    match_id: str,
+    published_at: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    產出對應 GAS analysis 表結構的 payload。所有可序列化的
+    遙測都保留下來，正式推薦的 model_direction 也一併帶入，
+    讓會員端能直接顯示賽事方向而不用反查 matches 表。
+    """
+
+    if not isinstance(
+        result,
+        dict,
+    ):
+        return {}
+
+    candidates = result.get(
+        "candidate_markets",
+        [],
+    )
+
+    if not isinstance(
+        candidates,
+        list,
+    ):
+        candidates = []
+
+    quality = result.get(
+        "model_quality",
+        {},
+    )
+
+    coherence = result.get(
+        "ht_ft_coherence",
+        {},
+    )
+
+    movement_container = (
+        result.get("odds_movement_analysis")
+        or result.get("odds_shift_analysis")
+        or {}
+    )
+
+    if not isinstance(
+        movement_container,
+        dict,
+    ):
+        movement_container = {}
+
+    family_out_records: List[Dict[str, Any]] = []
+    stress_records: List[Dict[str, Any]] = []
+    prior_records: List[Dict[str, Any]] = []
+    correct_score_records: List[Dict[str, Any]] = []
+
+    for candidate in candidates:
+        if not isinstance(
+            candidate,
+            dict,
+        ):
+            continue
+
+        family = candidate.get(
+            "family_out_audit"
+        )
+
+        if isinstance(
+            family,
+            dict,
+        ):
+            family_out_records.append({
+                "candidate_id": optional_text(
+                    candidate.get("id")
+                ),
+                "label": optional_text(
+                    candidate.get("label")
+                ),
+                "period": optional_text(
+                    candidate.get("period")
+                ),
+                **family,
+            })
+
+        stress = candidate.get(
+            "stress_audit"
+        )
+
+        if isinstance(
+            stress,
+            dict,
+        ):
+            stress_records.append({
+                "candidate_id": optional_text(
+                    candidate.get("id")
+                ),
+                "label": optional_text(
+                    candidate.get("label")
+                ),
+                **stress,
+            })
+
+        prior = candidate.get(
+            "prior_comparison"
+        )
+
+        if isinstance(
+            prior,
+            dict,
+        ):
+            prior_records.append({
+                "candidate_id": optional_text(
+                    candidate.get("id")
+                ),
+                "label": optional_text(
+                    candidate.get("label")
+                ),
+                **prior,
+            })
+
+        scores = candidate.get(
+            "correct_score_references"
+        ) or candidate.get(
+            "correct_scores"
+        )
+
+        if isinstance(
+            scores,
+            list,
+        ):
+            correct_score_records.extend(
+                item
+                for item in scores
+                if isinstance(
+                    item,
+                    dict,
+                )
+            )
+
+    # engine 層級的正確比分參考（例如 FT 模型統一產出）
+    engine_scores = result.get(
+        "correct_score_references"
+    )
+
+    if isinstance(
+        engine_scores,
+        list,
+    ):
+        correct_score_records.extend(
+            item
+            for item in engine_scores
+            if isinstance(
+                item,
+                dict,
+            )
+        )
+
+    consensus = result.get(
+        "consensus",
+        {},
+    )
+
+    if not isinstance(
+        consensus,
+        dict,
+    ):
+        consensus = {}
+
+    runtime = (
+        result.get(
+            "runtime",
+            {},
+        )
+        if isinstance(
+            result.get("runtime"),
+            dict,
+        )
+        else {}
+    )
+
+    now = (
+        published_at
+        or datetime.now()
+        .astimezone()
+        .isoformat(
+            timespec="seconds",
+        )
+    )
+
+    manual_direction = (
+        st.session_state.get(
+            "manual_model_direction"
+        )
+        if "manual_model_direction" in st.session_state
+        else ""
+    )
+
+    engine_direction = ""
+
+    if isinstance(
+        quality,
+        dict,
+    ):
+        engine_direction = optional_text(
+            quality.get("direction")
+            or quality.get("model_direction")
+        )
+
+    return {
+        "match_id": match_id,
+        "model_quality_status": optional_text(
+            quality.get("status")
+            if isinstance(
+                quality,
+                dict,
+            )
+            else quality
+        ),
+        "ht_ft_coherence_status": optional_text(
+            coherence.get("status")
+            if isinstance(
+                coherence,
+                dict,
+            )
+            else coherence
+        ),
+        "odds_movement_status": optional_text(
+            movement_container.get("status")
+        ),
+        "model_direction": (
+            manual_direction
+            or engine_direction
+        ),
+        "engine_version": ENGINE_VERSION,
+        "runtime_seconds": (
+            runtime.get("total_seconds")
+            if isinstance(
+                runtime,
+                dict,
+            )
+            else None
+        ),
+        "published_at": now,
+        "updated_at": now,
+        "movement_audits_json": _json_or_empty(
+            _extract_movement_audits(
+                result,
+                candidates,
+            )
+        ),
+        "family_out_json": _json_or_empty(
+            family_out_records
+        ),
+        "stress_audits_json": _json_or_empty(
+            stress_records
+        ),
+        "prior_comparison_json": _json_or_empty(
+            prior_records
+        ),
+        "correct_scores_json": _json_or_empty(
+            correct_score_records
+        ),
+        "consensus_json": _json_or_empty(
+            consensus
+        ),
+    }
+
+
 def stable_match_id(
     result: Dict[str, Any],
 ) -> str:
@@ -2000,6 +3600,14 @@ def build_portal_bundle(
             "final_score": "",
         },
         "recommendations": records,
+        # V3 增量：把完整遙測包進同一份 bundle，
+        # 由 GAS 端的 publish_analysis 寫入 analysis 表。
+        # 若本次結果沒有可序列化的遙測，此欄會是空 dict，
+        # 發布時應略過 analysis 呼叫。
+        "analysis": build_analysis_payload(
+            result,
+            match_id,
+        ),
     }
 
 
@@ -2490,6 +4098,11 @@ if result:
             ),
             f"Engine V{ENGINE_VERSION}",
         )
+
+    # ── V3 模型健康診斷面板（Hero 正下方、tabs 之前）──
+    render_health_panel(
+        result
+    )
 
     section = st.radio(
         "結果部分",
@@ -3158,51 +4771,113 @@ if result:
                     candidate_id
                 )
 
-        # ── 每個候選盤的 tier + commentary 輸入 ────────────
+        # ── 只對「已勾選要發布」的候選盤開放 tier + 短評編輯 ──
+        #
+        # 手寫賽事方向（整場共用，永遠可編輯）與
+        # 逐條 tier / 短評（僅限本次要發布的項目）分開處理：
+        # 前者影響整場的比賽敘事，後者只針對即將送出的推薦。
+        # 這樣可避免對幾十條候選盤逐條調整，改為先選定目標、
+        # 再集中微調進取程度。
         st.divider()
 
-        st.markdown(
-            "**✍️ 每項推薦的等級與短評**"
-        )
-
-        for candidate in candidates:
-            candidate_id = optional_text(
+        selected_for_edit = [
+            candidate
+            for candidate in candidates
+            if optional_text(
                 candidate.get("id")
+            ) in selected_ids
+        ]
+
+        if not selected_for_edit:
+            st.info(
+                "尚未勾選任何要發布的候選盤。"
+                "請先在上方的清單中勾選，"
+                "才會在此開放等級與短評編輯。"
             )
 
-            with st.expander(
-                f"{candidate_id}｜"
-                f"{candidate.get('period')}｜"
-                f"{candidate.get('label')}",
-                expanded=False,
-            ):
-                manual_tier = st.selectbox(
-                    "推薦等級",
-                    options=[
-                        "OFFICIAL",
-                        "ALTERNATIVE",
-                        "CORRECT_SCORE",
-                    ],
-                    index=(
-                        0
-                        if candidate.get("official")
-                        else 1
-                    ),
-                    key=(
-                        "manual_tier_"
-                        + candidate_id
-                    ),
+        else:
+            st.markdown(
+                f"**✍️ 已勾選 {len(selected_for_edit)} 項"
+                f"的等級與短評**"
+            )
+
+            st.caption(
+                "以下編輯只會套用到本次要發布的項目。"
+                "調整正式 / 進取程度，或為「雨姐短評」補充說明。"
+            )
+
+            for candidate in selected_for_edit:
+                candidate_id = optional_text(
+                    candidate.get("id")
                 )
 
-                manual_commentary = st.text_area(
-                    "雨姐短評",
-                    key=(
-                        "manual_commentary_"
-                        + candidate_id
-                    ),
-                    placeholder="例：利物浦主場讓半球的支持度一般，需留意",
-                    height=68,
+                label = (
+                    f"{candidate_id}｜"
+                    f"{candidate.get('period')}｜"
+                    f"{candidate.get('label')}"
                 )
+
+                default_tier = (
+                    "OFFICIAL"
+                    if candidate.get("official")
+                    else "ALTERNATIVE"
+                )
+
+                # 若 session_state 裡還留著上次的值，
+                # 就沿用，否則用 engine 的建議。
+                state_key = (
+                    "manual_tier_"
+                    + candidate_id
+                )
+
+                if state_key in st.session_state:
+                    default_tier = (
+                        st.session_state[state_key]
+                    )
+
+                with st.expander(
+                    label,
+                    expanded=(
+                        len(selected_for_edit) <= 3
+                    ),
+                ):
+                    st.selectbox(
+                        "推薦等級（調整進取程度）",
+                        options=[
+                            "OFFICIAL",
+                            "ALTERNATIVE",
+                            "CORRECT_SCORE",
+                        ],
+                        index=(
+                            0
+                            if default_tier == "OFFICIAL"
+                            else 1
+                            if default_tier == "ALTERNATIVE"
+                            else 2
+                        ),
+                        key=(
+                            "manual_tier_"
+                            + candidate_id
+                        ),
+                        help=(
+                            "OFFICIAL 為正式推薦，"
+                            "ALTERNATIVE 為進取/備選，"
+                            "CORRECT_SCORE 為波膽參考"
+                        ),
+                    )
+
+                    st.text_area(
+                        "雨姐短評",
+                        key=(
+                            "manual_commentary_"
+                            + candidate_id
+                        ),
+                        placeholder=(
+                            "例：利物浦主場讓半球的支持度一般，"
+                            "需留意"
+                        ),
+                        height=68,
+                    )
 
         bundle = build_portal_bundle(
             result,
@@ -3237,26 +4912,85 @@ if result:
             disabled=not bool(
                 selected_ids
             ),
+            help=(
+                "先發布 analysis（V3 遙測），"
+                "成功後再發布 recommendations 與 match 資料。"
+            ),
         ):
+            analysis_payload = bundle.get(
+                "analysis",
+                {},
+            )
+
+            has_analysis = bool(
+                analysis_payload
+            ) and any(
+                key.endswith("_json")
+                and analysis_payload.get(key)
+                for key in (
+                    "movement_audits_json",
+                    "family_out_json",
+                    "stress_audits_json",
+                    "prior_comparison_json",
+                    "correct_scores_json",
+                    "consensus_json",
+                )
+            )
+
+            bundle_to_send = {
+                key: value
+                for key, value in bundle.items()
+                if key != "analysis"
+            }
+
+            analysis_response = None
+            bundle_response = None
+
             try:
                 with st.spinner(
-                    "正在發佈……"
+                    "正在發佈 analysis（V3 遙測）……"
+                    if has_analysis
+                    else "正在發佈……"
                 ):
-                    response = portal_request(
-                        bundle
+                    if has_analysis:
+                        analysis_response = portal_request({
+                            "action": "publish_analysis",
+                            "analysis": analysis_payload,
+                        })
+
+                with st.spinner(
+                    "正在發佈 match 與 recommendations……"
+                ):
+                    bundle_response = portal_request(
+                        bundle_to_send
                     )
 
-                st.success(
-                    "Portal 發佈成功。"
-                )
+                if has_analysis:
+                    st.success(
+                        "✅ Analysis（V3 遙測）與 Portal "
+                        "推薦已發布成功。"
+                    )
+
+                    with st.expander(
+                        "Analysis 發布回應",
+                        expanded=False,
+                    ):
+                        st.json(
+                            analysis_response
+                        )
+
+                else:
+                    st.success(
+                        "Portal 發布成功。"
+                    )
 
                 st.json(
-                    response
+                    bundle_response
                 )
 
             except Exception as error:
                 st.error(
-                    f"Portal 發佈失敗：{error}"
+                    f"Portal 發布失敗：{error}"
                 )
 
                 with st.expander(
