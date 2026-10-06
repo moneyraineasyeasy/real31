@@ -21,6 +21,7 @@ import os
 import traceback
 import urllib.error
 import urllib.request
+import sys
 from copy import deepcopy
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -66,7 +67,7 @@ ENGINE_VERSION = getattr(
 
 DEFAULT_API_URL = (
     "https://script.google.com/macros/s/"
-    "AKfycbz7fltyng10Ulm2fjfgWWl3740GRFbHcvUci2lSvAv8nhkduIOnyfG_Q0IPwxKYoddd6g/"
+    "AKfycbwhceZ9-Z-n4R7U-ctJsLrmZuSiy98MtCPgUIw26ZOM9tv2Y5WPt7af56mJJ8M4pbqfww/"
     "exec"
 )
 
