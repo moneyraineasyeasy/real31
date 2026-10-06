@@ -24,7 +24,7 @@ import urllib.request
 import sys
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 os.environ["ARROW_DEFAULT_MEMORY_POOL"] = "system"
 
@@ -67,7 +67,7 @@ ENGINE_VERSION = getattr(
 
 DEFAULT_API_URL = (
     "https://script.google.com/macros/s/"
-    "AKfycbz7fltyng10Ulm2fjfgWWl3740GRFbHcvUci2lSvAv8nhkduIOnyfG_Q0IPwxKYoddd6g/"
+    "AKfycbwhceZ9-Z-n4R7U-ctJsLrmZuSiy98MtCPgUIw26ZOM9tv2Y5WPt7af56mJJ8M4pbqfww/"
     "exec"
 )
 
@@ -3179,6 +3179,7 @@ def _match_candidate_id(
 def _extract_movement_audits(
     result: Dict[str, Any],
     candidates: List[Dict[str, Any]],
+    selected_set: Optional[Set[str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     優先取 engine 產出的結構化走勢審計；找不到時退回到各
@@ -3805,7 +3806,7 @@ def build_analysis_payload(
     audits = _extract_movement_audits(
         result,
         candidates,
-        selected_candidate_ids=selected_candidate_ids,
+        selected_set=selected_set,
     )
 
     _debug_log(
