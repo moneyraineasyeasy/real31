@@ -457,6 +457,16 @@ def format_ev(
     return f"{number * 100:+.{digits}f}%"
 
 
+def _fmt_market_change(value: Any) -> str:
+    """把市場變動值格式化為帶正負號的 pp 字串，None 時回傳 —。"""
+    number = safe_float(value)
+
+    if number is None:
+        return "—"
+
+    return f"{number:+.2f}pp"
+
+
 def probability_value(
     record: Dict[str, Any],
     metric: str,
@@ -1168,6 +1178,30 @@ def recommendation_card(
                 )}</b>
                 {shift_text}
             </div>
+            <div class="recommendation-stats" style="margin-top:4px;padding-top:4px;border-top:1px dashed rgba(255,255,255,0.15);">
+                <b>市場共識：</b>
+                {
+                    f'{safe_float(recommendation.get("consensus_pct"), 0.0) * 100:.0f}%'
+                    if recommendation.get("consensus_pct") is not None
+                    else '—'
+                }
+                ｜<b>Pinnacle 對齊：</b>
+                {
+                    '✅ 是'
+                    if recommendation.get("pinnacle_alignment") is True
+                    else (
+                        '❌ 否'
+                        if recommendation.get("pinnacle_alignment") is False
+                        else '—'
+                    )
+                }
+                ｜<b>平均偏差：</b>
+                {
+                    f'{safe_float(recommendation.get("mean_deviation_pp"), 0.0):.1f}pp'
+                    if recommendation.get("mean_deviation_pp") is not None
+                    else '—'
+                }
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1297,13 +1331,88 @@ def candidate_dataframe(
                 )
             ),
             "市場變動": (
-                f"{safe_float(shift.get('market_implied_probability_change_pp'), 0.0):+.2f}pp"
-                if safe_float(shift.get("market_implied_probability_change_pp")) is not None
-                else "—"
+                _fmt_market_change(
+                    shift.get(
+                        "market_implied_probability_change_pp"
+                    )
+                )
             ),
             "排除原因": "；".join(
                 reasons
             ),
+            "共識度": (
+                f"{safe_float(candidate.get('consensus_pct'), 0.0) * 100:.0f}%"
+                if candidate.get("consensus_pct") is not None
+                else "—"
+            ),
+            "Pinnacle 對齊": (
+                "✅ 是"
+                if candidate.get("pinnacle_alignment")
+                else (
+                    "❌ 否"
+                    if candidate.get("pinnacle_alignment") is False
+                    else "—"
+                )
+            ),
+            "平均偏差(pp)": (
+                f"{safe_float(candidate.get('mean_deviation_pp'), 0.0):.1f}"
+                if candidate.get("mean_deviation_pp") is not None
+                else "—"
+            ),
+        })
+
+    return pd.DataFrame(
+        rows
+    )
+
+
+def consensus_dataframe(
+    records: List[Dict[str, Any]],
+) -> pd.DataFrame:
+    """把 market consensus 檢查結果整理成顯示用的 dataframe。"""
+    if not records:
+        return pd.DataFrame()
+
+    rows = []
+
+    for record in records:
+        rows.append({
+            "市場": record.get("market"),
+            "時段": record.get("period"),
+            "選項": record.get("selection"),
+            "線位": (
+                f'{safe_float(record.get("line"), 0.0):.2f}'
+                if record.get("line") is not None
+                else "—"
+            ),
+            "Pinnacle 機率": format_probability(
+                record.get("pinnacle_probability"),
+            ),
+            "共識度": (
+                f'{safe_float(record.get("consensus_pct"), 0.0) * 100:.0f}%'
+                if record.get("consensus_pct") is not None
+                else "—"
+            ),
+            "Pinnacle 對齊": (
+                "✅ 是"
+                if record.get("pinnacle_alignment")
+                else (
+                    "❌ 否"
+                    if record.get("pinnacle_alignment") is False
+                    else "—"
+                )
+            ),
+            "平均偏差(pp)": (
+                f'{safe_float(record.get("mean_deviation_pp"), 0.0):.2f}'
+                if record.get("mean_deviation_pp") is not None
+                else "—"
+            ),
+            "最大偏差(pp)": (
+                f'{safe_float(record.get("max_deviation_pp"), 0.0):.2f}'
+                if record.get("max_deviation_pp") is not None
+                else "—"
+            ),
+            "莊家數": record.get("n_books"),
         })
 
     return pd.DataFrame(
@@ -1471,9 +1580,11 @@ def movement_dataframe(
                 2,
             ),
             "概率變動": (
-                f"{safe_float(audit.get('market_implied_probability_change_pp'), 0.0):+.2f}pp"
-                if safe_float(audit.get("market_implied_probability_change_pp")) is not None
-                else "—"
+                _fmt_market_change(
+                    audit.get(
+                        "market_implied_probability_change_pp"
+                    )
+                )
             ),
             "Pinnacle": status_chinese(
                 primary.get(
@@ -1719,14 +1830,46 @@ def build_portal_bundle(
             ).hexdigest()[:22]
         )
 
-        records.append({
-            "rec_id": rec_id,
-            "match_id": match_id,
-            "tier": (
+        # 讀取手動 tier（session_state）
+        manual_tier_key = (
+            "manual_tier_"
+            + candidate_id
+        )
+
+        manual_tier = (
+            st.session_state.get(
+                manual_tier_key
+            )
+            if manual_tier_key in st.session_state
+            else None
+        )
+
+        if not manual_tier:
+            manual_tier = (
                 "OFFICIAL"
                 if candidate.get("official")
                 else "ALTERNATIVE"
-            ),
+            )
+
+        # 讀取手動 commentary（session_state）
+        manual_commentary_key = (
+            "manual_commentary_"
+            + candidate_id
+        )
+
+        manual_commentary = (
+            st.session_state.get(
+                manual_commentary_key
+            )
+            if manual_commentary_key in st.session_state
+            else ""
+        )
+
+        records.append({
+            "rec_id": rec_id,
+            "match_id": match_id,
+            "tier": manual_tier,
+            "commentary": manual_commentary,
             "rank": (
                 candidate.get(
                     "official_rank"
@@ -1779,7 +1922,6 @@ def build_portal_bundle(
             "price_status": candidate.get(
                 "price_status"
             ),
-            "commentary": "",
             "stars": (
                 4
                 if candidate.get("official")
@@ -1803,162 +1945,7 @@ def build_portal_bundle(
                 "expected_return",
                 "minimum",
             ),
-
-            # ---- Aegis v3 telemetry ----
-            "movement_verdict": (
-                shift.get("verdict")
-                if isinstance(shift, dict)
-                else None
-            ),
-            "movement_strength": (
-                shift.get("strength")
-                if isinstance(shift, dict)
-                else None
-            ),
-            "movement_agreement_ratio": (
-                shift.get("agreement_ratio")
-                if isinstance(shift, dict)
-                else None
-            ),
-            "movement_probability_change_pp": (
-                shift.get(
-                    "market_implied_probability_change_pp"
-                )
-                if isinstance(shift, dict)
-                else None
-            ),
-            "family_out_status": (
-                family_out.get("status")
-                if isinstance(family_out, dict)
-                else None
-            ),
         })
-
-    movement = result.get(
-        "odds_shift_analysis",
-        {},
-    )
-
-    shift = candidate.get(
-        "odds_shift",
-        {},
-    )
-
-    if not isinstance(shift, dict):
-        shift = {}
-
-    family_out = candidate.get(
-        "family_out_audit",
-        {},
-    )
-
-    if not isinstance(family_out, dict):
-        family_out = {}
-
-    family_out_global = result.get(
-        "family_out_analysis",
-        {},
-    )
-
-    stress = result.get(
-        "stress_analysis",
-        {},
-    )
-
-    coherence = result.get(
-        "ht_ft_coherence",
-        {},
-    )
-
-    model_quality = result.get(
-        "model_quality",
-        {},
-    )
-
-    correct_scores = result.get(
-        "correct_scores",
-        {},
-    )
-
-    runtime = result.get(
-        "runtime",
-        {},
-    )
-
-    audits = movement.get(
-        "candidate_audits",
-        [],
-    )
-
-    def _json(value):
-        if value is None:
-            return ""
-
-        return json_text(value)
-
-    analysis = {
-        "match_id": match_id,
-        "model_quality_status": (
-            model_quality.get("status")
-            if isinstance(model_quality, dict)
-            else None
-        ),
-        "ht_ft_coherence_status": (
-            coherence.get("status")
-            if isinstance(coherence, dict)
-            else None
-        ),
-        "odds_movement_status": (
-            movement.get("status")
-            if isinstance(movement, dict)
-            else None
-        ),
-        "model_direction": (
-            "；".join(
-                optional_text(
-                    item.get("label")
-                )
-                for item in result.get(
-                    "recommendations",
-                    [],
-                )
-            )
-            or "沒有正式推薦"
-        ),
-        "engine_version": ENGINE_VERSION,
-        "runtime_seconds": (
-            runtime.get("total_seconds")
-            if isinstance(runtime, dict)
-            else None
-        ),
-        "movement_audits_json": _json(
-            audits
-        ),
-        "family_out_json": _json(
-            family_out_global
-        ),
-        "stress_audits_json": _json(
-            stress
-        ),
-        "prior_comparison_json": _json(
-            result.get(
-                "pre_projection_prior_comparison"
-            )
-        ),
-        "correct_scores_json": _json(
-            correct_scores.get(
-                "recommendations",
-                [],
-            )
-            if isinstance(correct_scores, dict)
-            else []
-        ),
-        "consensus_json": _json(
-            movement.get("consensus")
-            if isinstance(movement, dict)
-            else None
-        ),
-    }
 
     return {
         "action": "publish_bundle",
@@ -1985,21 +1972,34 @@ def build_portal_bundle(
                 "kickoff"
             ),
             "status": publish_status,
-            "model_direction": analysis[
-                "model_direction"
-            ],
+            "model_direction": (
+                st.session_state.get(
+                    "manual_model_direction"
+                )
+                if "manual_model_direction" in st.session_state
+                and st.session_state.get(
+                    "manual_model_direction"
+                )
+                else (
+                    "；".join(
+                        optional_text(
+                            item.get("label")
+                        )
+                        for item in result.get(
+                            "recommendations",
+                            [],
+                        )
+                    )
+                    or "沒有正式推薦"
+                )
+            ),
             "model_summary": (
                 f"AEGIS Engine V{ENGINE_VERSION}"
             ),
             "top_scores": "",
             "final_score": "",
-            "engine_version": ENGINE_VERSION,
-            "runtime_seconds": analysis[
-                "runtime_seconds"
-            ],
         },
         "recommendations": records,
-        "analysis": analysis,
     }
 
 
@@ -2103,6 +2103,16 @@ with st.sidebar:
         ] = None
 
         st.rerun()
+
+    st.divider()
+
+    if st.button(
+        "🧹 清除 Engine Cache",
+        use_container_width=True,
+        help="只清 engine 的 @st.cache_data，不影響目前分析結果。用於釋放記憶體。",
+    ):
+        cached_engine_run.clear()
+        st.toast("Engine cache 已清除")
 
     st.divider()
 
@@ -2491,6 +2501,7 @@ if result:
             "穩健性",
             "波膽參考",
             "模型診斷",
+            "市場共識",
             "Portal 發佈",
             "完整 JSON",
         ],
@@ -2609,10 +2620,10 @@ if result:
 
             third.metric(
                 "中位命中率差距",
-                (
-                    f"{safe_float(disparity.get('median_hit_range_pp'), 0.0):.2f}pp"
-                    if safe_float(disparity.get("median_hit_range_pp")) is not None
-                    else "—"
+                _fmt_market_change(
+                    disparity.get(
+                        "median_hit_range_pp"
+                    )
                 ),
             )
 
@@ -2978,6 +2989,119 @@ if result:
                 )
             )
 
+    elif section == "市場共識":
+        st.subheader(
+            "📊 市場共識檢查"
+        )
+
+        st.info(
+            "此表顯示每個候選盤的靜態尾盤共識狀態："
+            "多家莊家的 implied probability 是否一致、"
+            "Pinnacle 是否站在多數方、各家偏差多大。"
+            "這些指標由 engine 計算，不含任何閾值判定。"
+        )
+
+        # 從 candidates 收集 consensus 資料
+        consensus_records = []
+
+        for candidate in candidates:
+            consensus = candidate.get(
+                "market_consensus",
+                {},
+            )
+
+            if not isinstance(
+                consensus,
+                dict,
+            ) or not consensus:
+                # 沒有共識資料時，用 candidate 上的扁平欄位建一筆
+                if candidate.get(
+                    "consensus_pct"
+                ) is not None:
+                    consensus_records.append({
+                        "market": candidate.get(
+                            "market"
+                        ),
+                        "period": candidate.get(
+                            "period"
+                        ),
+                        "selection": candidate.get(
+                            "selection"
+                        ),
+                        "line": candidate.get(
+                            "line"
+                        ),
+                        "pinnacle_probability": candidate.get(
+                            "pinnacle_probability"
+                        ),
+                        "consensus_pct": candidate.get(
+                            "consensus_pct"
+                        ),
+                        "pinnacle_alignment": candidate.get(
+                            "pinnacle_alignment"
+                        ),
+                        "mean_deviation_pp": candidate.get(
+                            "mean_deviation_pp"
+                        ),
+                        "max_deviation_pp": candidate.get(
+                            "max_deviation_pp"
+                        ),
+                        "n_books": candidate.get(
+                            "n_books"
+                        ),
+                    })
+
+                continue
+
+            consensus_records.append({
+                "market": consensus.get(
+                    "market"
+                ),
+                "period": consensus.get(
+                    "period"
+                ),
+                "selection": consensus.get(
+                    "selection"
+                ),
+                "line": consensus.get(
+                    "line"
+                ),
+                "pinnacle_probability": consensus.get(
+                    "pinnacle_probability"
+                ),
+                "consensus_pct": consensus.get(
+                    "consensus_pct"
+                ),
+                "pinnacle_alignment": consensus.get(
+                    "pinnacle_alignment"
+                ),
+                "mean_deviation_pp": consensus.get(
+                    "mean_deviation_pp"
+                ),
+                "max_deviation_pp": consensus.get(
+                    "max_deviation_pp"
+                ),
+                "n_books": consensus.get(
+                    "n_books"
+                ),
+            })
+
+        if not consensus_records:
+            st.warning(
+                "沒有共識資料。engine 可能未執行 market consensus 檢查。"
+            )
+
+        else:
+            df = consensus_dataframe(
+                consensus_records
+            )
+
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True,
+            )
+
     elif section == "Portal 發佈":
         st.subheader(
             "📤 Portal 發佈"
@@ -2990,6 +3114,22 @@ if result:
                 "draft",
             ],
         )
+
+        # ── 手動輸入區（整場一次填） ──────────────────────
+        st.divider()
+
+        st.markdown(
+            "**✍️ 手動編輯（整場適用）**"
+        )
+
+        manual_direction = st.text_area(
+            "賽事方向（Ultra V2 模型方向）",
+            key="manual_model_direction",
+            placeholder="例：利物浦主勝方向，預計低比分節奏",
+            height=68,
+        )
+
+        st.divider()
 
         selected_ids = set()
 
@@ -3016,6 +3156,52 @@ if result:
             ):
                 selected_ids.add(
                     candidate_id
+                )
+
+        # ── 每個候選盤的 tier + commentary 輸入 ────────────
+        st.divider()
+
+        st.markdown(
+            "**✍️ 每項推薦的等級與短評**"
+        )
+
+        for candidate in candidates:
+            candidate_id = optional_text(
+                candidate.get("id")
+            )
+
+            with st.expander(
+                f"{candidate_id}｜"
+                f"{candidate.get('period')}｜"
+                f"{candidate.get('label')}",
+                expanded=False,
+            ):
+                manual_tier = st.selectbox(
+                    "推薦等級",
+                    options=[
+                        "OFFICIAL",
+                        "ALTERNATIVE",
+                        "CORRECT_SCORE",
+                    ],
+                    index=(
+                        0
+                        if candidate.get("official")
+                        else 1
+                    ),
+                    key=(
+                        "manual_tier_"
+                        + candidate_id
+                    ),
+                )
+
+                manual_commentary = st.text_area(
+                    "雨姐短評",
+                    key=(
+                        "manual_commentary_"
+                        + candidate_id
+                    ),
+                    placeholder="例：利物浦主場讓半球的支持度一般，需留意",
+                    height=68,
                 )
 
         bundle = build_portal_bundle(
@@ -3060,35 +3246,6 @@ if result:
                         bundle
                     )
 
-                    # V3: 一併發布 analysis（走勢 / 穩健性 / 波膽）
-                    analysis = bundle.get(
-                        "analysis"
-                    )
-
-                    analysis_response = None
-
-                    if isinstance(
-                        analysis,
-                        dict,
-                    ) and analysis.get(
-                        "match_id"
-                    ):
-                        try:
-                            analysis_response = portal_request(
-                                {
-                                    "action": "publish_analysis",
-                                    "analysis": analysis,
-                                }
-                            )
-
-                        except Exception as analysis_error:
-                            analysis_response = {
-                                "ok": False,
-                                "error": str(
-                                    analysis_error
-                                ),
-                            }
-
                 st.success(
                     "Portal 發佈成功。"
                 )
@@ -3096,29 +3253,6 @@ if result:
                 st.json(
                     response
                 )
-
-                if analysis_response is not None:
-                    if analysis_response.get(
-                        "ok"
-                    ):
-                        st.success(
-                            "V3 分析資料（走勢 / "
-                            "穩健性 / 波膽）發佈成功。"
-                        )
-
-                    else:
-                        st.warning(
-                            "分析資料發佈未完成："
-                            f"{analysis_response.get('error')}"
-                        )
-
-                    with st.expander(
-                        "分析發布回應",
-                        expanded=False,
-                    ):
-                        st.json(
-                            analysis_response
-                        )
 
             except Exception as error:
                 st.error(
