@@ -66,7 +66,7 @@ ENGINE_VERSION = getattr(
 
 DEFAULT_API_URL = (
     "https://script.google.com/macros/s/"
-    "AKfycbz7fltyng10Ulm2fjfgWWl3740GRFbHcvUci2lSvAv8nhkduIOnyfG_Q0IPwxKYoddd6g/"
+    "AKfycbwhceZ9-Z-n4R7U-ctJsLrmZuSiy98MtCPgUIw26ZOM9tv2Y5WPt7af56mJJ8M4pbqfww/"
     "exec"
 )
 
@@ -3004,6 +3004,177 @@ def _json_or_empty(value: Any) -> str:
     return optional_text(value)
 
 
+def _slim_movement_audit(
+    item: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    瘦身走勢審計記錄：只保留 Portal 端渲染所需的欄位，
+    去掉完整的 odds series（pinnacle_confirmation / hkjc_response 中的細節），
+    避免單條記錄過大導致 GAS 的 truncateForCell 截斷整個 JSON。
+    """
+
+    primary = item.get(
+        "pinnacle_confirmation",
+        {},
+    )
+
+    if not isinstance(
+        primary,
+        dict,
+    ):
+        primary = {}
+
+    hkjc = item.get(
+        "hkjc_response",
+        {},
+    )
+
+    if not isinstance(
+        hkjc,
+        dict,
+    ):
+        hkjc = {}
+
+    return {
+        "id": item.get("id"),
+        "label": item.get("label"),
+        "period": item.get("period"),
+        "market": item.get("market"),
+        "selection": item.get("selection"),
+        "line": item.get("line"),
+        "verdict": item.get("verdict"),
+        "strength": item.get("strength"),
+        "external_book_count": item.get("external_book_count"),
+        "agreement_ratio": item.get("agreement_ratio"),
+        "consensus_opening_probability": item.get(
+            "consensus_opening_probability"
+        ),
+        "consensus_latest_probability": item.get(
+            "consensus_latest_probability"
+        ),
+        "market_implied_probability_change_pp": item.get(
+            "market_implied_probability_change_pp"
+        ),
+        "pinnacle_confirmation": {
+            "status": primary.get("status"),
+            "note": primary.get("note"),
+        },
+        "hkjc_response": {
+            "status": hkjc.get("status"),
+            "note": hkjc.get("note"),
+        },
+        "actionability": item.get("actionability"),
+        "candidate_id": item.get("candidate_id"),
+    }
+
+
+def _match_candidate_id(
+    item: Dict[str, Any],
+    candidates: List[Dict[str, Any]],
+    label_to_cid: Dict[str, str],
+) -> str:
+    """
+    從走勢審計記錄反查所屬 candidate_id。
+    匹配順序：
+    1. item 已有 candidate_id
+    2. item["id"] 直接等於某個 candidate 的 id
+    3. (period, market, selection) 組合匹配
+    4. label 匹配
+    """
+
+    # 1. 已有 candidate_id
+    existing = optional_text(
+        item.get("candidate_id")
+    )
+
+    if existing:
+        return existing
+
+    # 2. item["id"] 直接等於 candidate["id"]
+    item_id = optional_text(
+        item.get("id")
+    )
+
+    if item_id:
+        for candidate in candidates:
+            if not isinstance(
+                candidate,
+                dict,
+            ):
+                continue
+
+            if optional_text(
+                candidate.get("id")
+            ) == item_id:
+                return item_id
+
+    # 3. (period, market, selection) 組合匹配
+    item_period = optional_text(
+        item.get("period")
+    ).lower()
+
+    item_market = optional_text(
+        item.get("market")
+    ).lower()
+
+    item_selection = optional_text(
+        item.get("selection")
+    ).lower()
+
+    if item_period and item_market:
+        for candidate in candidates:
+            if not isinstance(
+                candidate,
+                dict,
+            ):
+                continue
+
+            cand_period = optional_text(
+                candidate.get("period")
+            ).lower()
+
+            cand_market = optional_text(
+                candidate.get("market")
+            ).lower()
+
+            cand_selection = optional_text(
+                candidate.get("selection")
+            ).lower()
+
+            if (
+                cand_period == item_period
+                and cand_market == item_market
+            ):
+                # 如果有 selection，也要匹配
+                if item_selection and cand_selection:
+                    if cand_selection == item_selection:
+                        return optional_text(
+                            candidate.get("id")
+                        )
+                elif not item_selection:
+                    return optional_text(
+                        candidate.get("id")
+                    )
+
+    # 4. label 匹配
+    for lookup_key in (
+        "label",
+        "name",
+        "market_name",
+    ):
+        label_val = optional_text(
+            item.get(lookup_key)
+        )
+
+        if (
+            label_val
+            and label_val in label_to_cid
+        ):
+            return label_to_cid[label_val]
+
+    return ""
+
+
 def _extract_movement_audits(
     result: Dict[str, Any],
     candidates: List[Dict[str, Any]],
@@ -3075,47 +3246,39 @@ def _extract_movement_audits(
                     ):
                         continue
 
-                    # 帶上所屬 candidate_id，供 Portal 端按推薦過濾
-                    if "candidate_id" not in item:
-                        cid = (
-                            container.get("candidate_id")
-                            or container.get("id")
+                    cid = _match_candidate_id(
+                        item,
+                        candidates,
+                        label_to_cid,
+                    )
+
+                    if cid:
+                        item = dict(
+                            item,
+                            candidate_id=cid,
                         )
 
-                        if not cid:
-                            # 嘗試從 label / id 反查
-                            for lookup_key in (
-                                "label",
-                                "name",
-                                "market",
-                                "market_name",
-                                "id",
-                            ):
-                                label_val = optional_text(
-                                    item.get(lookup_key)
-                                )
-
-                                if (
-                                    label_val
-                                    and label_val in label_to_cid
-                                ):
-                                    cid = label_to_cid[
-                                        label_val
-                                    ]
-                                    break
-
-                        if cid:
-                            item = dict(
-                                item,
-                                candidate_id=cid,
-                            )
+                    # 瘦身：去掉完整的 odds series
+                    item = _slim_movement_audit(
+                        item
+                    )
 
                     audits.append(item)
 
     if not audits:
         seen = set()
 
+        # Fallback 1: candidate 層級的 odds_movement（list）
         for candidate in candidates:
+            # 過濾：只處理被選擇的盤口
+            if selected_set is not None:
+                cid = optional_text(
+                    candidate.get("id")
+                )
+
+                if cid not in selected_set:
+                    continue
+
             movement = candidate.get(
                 "odds_movement"
             )
@@ -3150,15 +3313,101 @@ def _extract_movement_audits(
                                 candidate_id=cid,
                             )
 
+                        # 瘦身
+                        item = _slim_movement_audit(
+                            item
+                        )
+
                         audits.append(item)
 
+    # Fallback 2: candidate 層級的 odds_shift（dict）
+    # engine 在每條 candidate 上放 "odds_shift" dict
+    if not audits:
+        for candidate in candidates:
+            # 過濾：只處理被選擇的盤口
+            if selected_set is not None:
+                cid = optional_text(
+                    candidate.get("id")
+                )
+
+                if cid not in selected_set:
+                    continue
+
+            shift = candidate.get(
+                "odds_shift"
+            )
+
+            if not isinstance(
+                shift,
+                dict,
+            ):
+                continue
+
+            label = optional_text(
+                candidate.get("label")
+            )
+
+            audit = dict(
+                shift,
+                candidate_id=cid,
+                label=label
+                or shift.get("label", ""),
+            )
+
+            # 瘦身
+            audit = _slim_movement_audit(
+                audit
+            )
+
+            audits.append(audit)
+
     return audits
+
+
+def _debug_log(
+    message: str,
+    key: str = "analysis_debug_log",
+) -> None:
+    """把除錯訊息存到 session_state，供 UI 顯示。"""
+
+    if "streamlit" not in sys.modules:
+        return
+
+    st_module = sys.modules["streamlit"]
+
+    if not hasattr(
+        st_module,
+        "session_state",
+    ):
+        return
+
+    log = st_module.session_state.get(
+        key,
+        [],
+    )
+
+    if not isinstance(
+        log,
+        list,
+    ):
+        log = []
+
+    log.append(
+        message
+    )
+
+    st_module.session_state[
+        key
+    ] = log[
+        -20:
+    ]
 
 
 def build_analysis_payload(
     result: Dict[str, Any],
     match_id: str,
     published_at: Optional[str] = None,
+    selected_candidate_ids: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     產出對應 GAS analysis 表結構的 payload。所有可序列化的
@@ -3210,10 +3459,40 @@ def build_analysis_payload(
     prior_records: List[Dict[str, Any]] = []
     correct_score_records: List[Dict[str, Any]] = []
 
+    # 建立 selected set，用於過濾（只收集被選擇 publish 的盤口）
+    selected_set: Optional[Set[str]] = None
+
+    if isinstance(
+        selected_candidate_ids,
+        list,
+    ) and selected_candidate_ids:
+        selected_set = set(
+            optional_text(
+                cid
+            )
+            for cid in selected_candidate_ids
+            if optional_text(cid)
+        )
+
+        _debug_log(
+            f"遙測過濾: 只收集 {len(selected_set)} 條已選擇盤口的資料"
+        )
+
     for candidate in candidates:
         if not isinstance(
             candidate,
             dict,
+        ):
+            continue
+
+        candidate_id = optional_text(
+            candidate.get("id")
+        )
+
+        # 如果指定了 selected_set，只處理被選擇的盤口
+        if (
+            selected_set is not None
+            and candidate_id not in selected_set
         ):
             continue
 
@@ -3247,9 +3526,7 @@ def build_analysis_payload(
             dict,
         ):
             stress_records.append({
-                "candidate_id": optional_text(
-                    candidate.get("id")
-                ),
+                "candidate_id": candidate_id,
                 "label": optional_text(
                     candidate.get("label")
                 ),
@@ -3279,26 +3556,101 @@ def build_analysis_payload(
             ):
                 priors = {}
 
+            # 瘦身 priors：只保留 Portal 需要的欄位
+            slim_priors = {}
+
+            for prior_name in (
+                "DIXON_COLES",
+                "INDEPENDENT_POISSON",
+                "COM_POISSON",
+            ):
+                record = priors.get(
+                    prior_name,
+                    {},
+                )
+
+                if not isinstance(
+                    record,
+                    dict,
+                ):
+                    slim_priors[prior_name] = record
+                    continue
+
+                hit = record.get(
+                    "probability",
+                    {},
+                )
+
+                if not isinstance(
+                    hit,
+                    dict,
+                ):
+                    hit = {}
+
+                slim_priors[prior_name] = {
+                    "available": record.get(
+                        "available"
+                    ),
+                    "scenario_count": record.get(
+                        "scenario_count"
+                    ),
+                    "hit": {
+                        "minimum": hit.get(
+                            "minimum"
+                        ),
+                        "median": hit.get(
+                            "median"
+                        ),
+                        "maximum": hit.get(
+                            "maximum"
+                        ),
+                    },
+                    "expected_return": {
+                        "median": (
+                            record.get(
+                                "expected_return",
+                                {},
+                            ).get(
+                                "median"
+                            )
+                            if isinstance(
+                                record.get(
+                                    "expected_return"
+                                ),
+                                dict,
+                            )
+                            else None
+                        ),
+                    },
+                    "fair_odds": {
+                        "median": (
+                            record.get(
+                                "fair_odds",
+                                {},
+                            ).get(
+                                "median"
+                            )
+                            if isinstance(
+                                record.get(
+                                    "fair_odds"
+                                ),
+                                dict,
+                            )
+                            else None
+                        ),
+                    },
+                }
+
             prior_records.append({
-                "candidate_id": optional_text(
-                    candidate.get("id")
-                ),
+                "candidate_id": candidate_id,
                 "label": optional_text(
                     candidate.get("label")
                 ),
-                "priors": priors,
+                "priors": slim_priors,
                 "disparity": prior_comparison.get(
                     "disparity",
                     {},
                 ),
-                **{
-                    k: v
-                    for k, v in prior_comparison.items()
-                    if k not in (
-                        "priors",
-                        "disparity",
-                    )
-                },
             })
 
         # correct_score_references / correct_scores 是「整場一份」的結構，
@@ -3385,6 +3737,116 @@ def build_analysis_payload(
         )
     )
 
+    # ---- 除錯日誌：記錄提取結果 ----
+    movement_container = (
+        result.get("odds_movement_analysis")
+        or result.get("odds_shift_analysis")
+        or {}
+    )
+
+    if isinstance(
+        movement_container,
+        dict,
+    ):
+        candidate_audits = (
+            movement_container.get("candidate_audits")
+        )
+
+        if isinstance(
+            candidate_audits,
+            list,
+        ):
+            _debug_log(
+                f"走勢審計: candidate_audits 找到 {len(candidate_audits)} 條 "
+                f"(status={movement_container.get('status')})"
+            )
+        else:
+            _debug_log(
+                f"走勢審計: container 有但無 candidate_audits "
+                f"(keys={list(movement_container.keys())[:8]})"
+            )
+    else:
+        _debug_log(
+            "走勢審計: result 中無 odds_movement_analysis / odds_shift_analysis"
+        )
+
+    # 檢查各 candidate 的 odds_shift
+    shift_count = sum(
+        1
+        for c in candidates
+        if isinstance(c, dict) and isinstance(
+            c.get("odds_shift"),
+            dict,
+        )
+    )
+
+    if shift_count > 0:
+        _debug_log(
+            f"走勢審計 fallback: {shift_count} 條 candidate 有 odds_shift"
+        )
+
+    # 檢查 prior
+    prior_count = sum(
+        1
+        for c in candidates
+        if isinstance(c, dict)
+        and isinstance(
+            c.get("pre_projection_prior_comparison"),
+            dict,
+        )
+    )
+
+    _debug_log(
+        f"Prior: {prior_count} 條 candidate 有 pre_projection_prior_comparison"
+    )
+
+    # ---- 提取結果摘要 ----
+    audits = _extract_movement_audits(
+        result,
+        candidates,
+        selected_candidate_ids=selected_candidate_ids,
+    )
+
+    _debug_log(
+        f"走勢審計: 提取 {len(audits)} 條"
+        + (
+            f" (只含 {len(selected_candidate_ids)} 條已選擇)"
+            if selected_candidate_ids
+            else ""
+        )
+    )
+
+    _debug_log(
+        f"Family-out: {len(family_out_records)} 條"
+        + (
+            f" (只含 {len(selected_candidate_ids)} 條已選擇)"
+            if selected_candidate_ids
+            else ""
+        )
+    )
+
+    _debug_log(
+        f"壓力測試: {len(stress_records)} 條"
+        + (
+            f" (只含 {len(selected_candidate_ids)} 條已選擇)"
+            if selected_candidate_ids
+            else ""
+        )
+    )
+
+    _debug_log(
+        f"Prior: {len(prior_records)} 條"
+        + (
+            f" (只含 {len(selected_candidate_ids)} 條已選擇)"
+            if selected_candidate_ids
+            else ""
+        )
+    )
+
+    _debug_log(
+        f"波膽: {len(correct_score_records)} 條"
+    )
+
     manual_direction = (
         st.session_state.get(
             "manual_model_direction"
@@ -3441,10 +3903,7 @@ def build_analysis_payload(
         "published_at": now,
         "updated_at": now,
         "movement_audits_json": _json_or_empty(
-            _extract_movement_audits(
-                result,
-                candidates,
-            )
+            audits
         ),
         "family_out_json": _json_or_empty(
             family_out_records
@@ -3724,6 +4183,7 @@ def build_portal_bundle(
         "analysis": build_analysis_payload(
             result,
             match_id,
+            selected_candidate_ids=list(selected_ids),
         ),
     }
 
